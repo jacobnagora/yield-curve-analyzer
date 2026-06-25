@@ -4,7 +4,7 @@ import numpy as np
 from scipy.interpolate import interp1d
 
 # Read data.csv from the same folder as this script, so it runs on any clone
-DATA_PATH = os.path.join(os.path.dirname(__file__), 'data.csv')
+DATA_PATH = os.path.join(os.path.dirname(__file__), 'data', 'data.csv')
 
 if not os.path.exists(DATA_PATH):
     raise FileNotFoundError(
@@ -21,7 +21,8 @@ data.loc[data.index[0:3], 'Periodicity'] = data.loc[data.index[0:3], 'Periodicit
 data = data.drop(columns=['Tenor (Maturity)'])
 
 # 2. Convert percentage strings to decimal floats
-for col in ['Baseline Yield (Spot Rate)', '2-Year Shock Curve', '5-Year Shock Curve', '10-Year Shock Curve']:
+for col in ['Baseline Yield (Spot Rate)', '2-Year Shock +', '2-Year Shock -',
+            '5-Year Shock +', '5-Year Shock -', '10-Year Shock +', '10-Year Shock -']:
     data[col] = data[col].str.rstrip('%').astype(float) / 100
 
 # 3. Define Bond Pricing Function with Odd-Period Logic
@@ -76,7 +77,7 @@ bonds = [
     {
         'name': 'Bond_2',
         'bond_tenor': 10,
-        'bond_coupon': 0.05,
+        'bond_coupon': 0.07,
         'bond_face_value': 1000.0,
         'coupon_frequency': 1
     },
@@ -86,11 +87,21 @@ bonds = [
         'bond_coupon': 0.08,
         'bond_face_value': 1000.0,
         'coupon_frequency': 1
+    },
+    {
+        'name': 'Bond_4',
+        'bond_tenor': 15,
+        'bond_coupon': 0.06,
+        'bond_face_value': 1000.0,
+        'coupon_frequency': 2
     }
+
+
 ]
 
 # 5. Define yield curves to test
-yield_curves = ['Baseline Yield (Spot Rate)', '5-Year Shock Curve', '10-Year Shock Curve']
+yield_curves = ['Baseline Yield (Spot Rate)', '2-Year Shock +', '2-Year Shock -', 
+                '5-Year Shock +', '5-Year Shock -', '10-Year Shock +', '10-Year Shock -']
 
 # 6. Loop through bonds and calculate prices
 results = []
@@ -116,8 +127,19 @@ print("\n\nPortfolio Summary:")
 print(bond_results.to_string(index=False))
 
 # 8. Calculate bond portfolio statistics
-# # 8.1 Calculate each bond's KRD
+## 8.1 Calculate each bond's KRD
+### Convert bond_results to a DataFrame for easier manipulation
+bonds_results = bond_results[['Bond_ID', 'Baseline Yield (Spot Rate)', '2-Year Shock +', '2-Year Shock -',
+                            '5-Year Shock +', '5-Year Shock -', '10-Year Shock +', '10-Year Shock -']]
 
+### Calculate KRD's for each shock
+krd_2_year = (bonds_results['2-Year Shock -'] - bonds_results['2-Year Shock +'])/(2 * 0.01 * bonds_results['Baseline Yield (Spot Rate)'])
+krd_5_year = (bonds_results['5-Year Shock -'] - bonds_results['5-Year Shock +'])/(2 * 0.01 * bonds_results['Baseline Yield (Spot Rate)'])
+krd_10_year = (bonds_results['10-Year Shock -'] - bonds_results['10-Year Shock +'])/(2 * 0.01 * bonds_results['Baseline Yield (Spot Rate)'])
+krds = pd.DataFrame({ 'Bond_ID': bonds_results['Bond_ID'], 'KRD_2_Year': krd_2_year, 'KRD_5_Year': krd_5_year, 'KRD_10_Year': krd_10_year})
 
+print(krds)
 # # 8.2 Calculate each bond's total duration
+
+
 # # 8.3 Calculate each bond's convexity
