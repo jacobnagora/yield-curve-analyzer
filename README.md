@@ -17,29 +17,30 @@ You get a table of each bond priced under every curve, so you can see straight a
 ## Setup
 
 ```bash
-git clone https://github.com/yourusername/yield-curve-analyzer.git
+git clone https://github.com/jacobnagora/yield-curve-analyzer.git
 cd yield-curve-analyzer
 pip install pandas numpy scipy
-```
-
-Then grab your yield curve CSV and drop it in as `data/data.csv`:
-
-```bash
-mkdir -p data
-cp ~/Downloads/your_curve_data.csv data/data.csv
-```
-
-And run it:
-
-```bash
 python main.py
 ```
 
-The `data/` folder is gitignored, so your CSV stays on your machine and never gets pushed.
+It comes with a sample `data.csv`, so it runs straight out of the box. The output is a table of every bond priced under every curve.
+
+## Using your own data
+
+The sample CSV is just a starting point. To run it on your own curves, open `data.csv` and edit it, in Excel, a text editor, whatever's easiest. Change the yield numbers, add or remove tenors, swap in entirely different curves. As long as the column format holds (below), the script picks up your changes on the next run. Nothing in the code needs touching.
 
 ## Input format
 
-It expects `data/data.csv` with a `Tenor (Maturity)` column and one column per curve. Tenors can be in months (`1-Month`, `3-Month`) or years (`2-Year`, `10-Year`), it sorts that out either way. Yields are read as percentages (`4.25%`) and turned into decimals for you.
+`data.csv` needs a `Tenor (Maturity)` column and one column per curve. Tenors can be in months (`1-Month`, `3-Month`) or years (`2-Year`, `10-Year`), it sorts that out either way. Yields are read as percentages (`4.25%`) and turned into decimals for you.
+
+A row looks like:
+
+| Tenor (Maturity) | Baseline Yield (Spot Rate) | 2-Year Shock Curve | 5-Year Shock Curve | 10-Year Shock Curve |
+|---|---|---|---|---|
+| 3-Month | 4.85% | 5.35% | 5.10% | 4.95% |
+| 2-Year | 4.20% | 4.95% | 4.55% | 4.30% |
+
+One thing to be mindful of: the script assumes the first three rows are sub-year tenors (i.e. in months) and converts them to fractional years. Keep your shortest maturities at the top and adjust as necessary.
 
 ## How it works
 
